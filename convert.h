@@ -8,6 +8,8 @@
 #ifndef convert_hpp
 #define convert_hpp
 
-#include <stdio.h>
+#include <string>
+
+void convert(const std::string fileName);
 
 #endif /* convert_hpp */
