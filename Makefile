@@ -6,15 +6,21 @@ HEADERS = h1event.h
 
 all: libH1event.so h1analysis
 
-h1analysis: h1analysis.cxx convert.cxx
-	$(CXX) -o$@ $(CXXFLAGS) $^ $(LDFLAGS) 
-	
+h1analysis: h1analysis.o convert.o
+	$(CXX) -o $@ $^ $(LDFLAGS)
+
+h1analysis.o: h1analysis.cxx convert.h libH1event.so
+	$(CXX) -c $(CXXFLAGS) h1analysis.cxx
+
+convert.o: convert.cxx convert.h libH1event.so
+	$(CXX) -c $(CXXFLAGS) convert.cxx
 
 libH1event.so: MyDict.cxx
-	$(CXX) -shared -fPIC -o$@ $(CXXFLAGS) $< $(LDFLAGS)
+	$(CXX) -shared -fPIC -o $@ $(CXXFLAGS) $< $(LDFLAGS)
 
 MyDict.cxx: $(HEADERS) Linkdef.h
 	rootcling -f $@ $^
 
+.PHONY : clean
 clean:
-	rm -rf *.o libH1Event.so *.dSYM *.pcm MyDict.cxx libH1event.so h1analysis *.root .DS_Store
+	rm -rf *.o libH1Event.so *.dSYM *.pcm MyDict.cxx libH1event.so h1analysis *.root
