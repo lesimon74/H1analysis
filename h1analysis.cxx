@@ -27,7 +27,34 @@ using RNTupleWriter = ROOT::Experimental::RNTupleWriter;
 
 const std::string_view ntuplename = "eventdata";
 
+
 const std::vector<std::string> ntupleFiles { "dstarmb.root", "dstarp1a.root", "dstarp1b.root", "dstarp2.root"};
+
+
+const Double_t dxbin = (0.17-0.13)/40;   // Bin-width
+const Double_t sigma = 0.0012;
+
+
+Double_t fdm5(Double_t *xx, Double_t *par)
+{
+   Double_t x = xx[0];
+   if (x <= 0.13957) return 0;
+   Double_t xp3 = (x-par[3])*(x-par[3]);
+   Double_t res = dxbin*(par[0]*TMath::Power(x-0.13957, par[1])
+       + par[2] / 2.5066/par[4]*TMath::Exp(-xp3/2/par[4]/par[4]));
+   return res;
+}
+
+
+Double_t fdm2(Double_t *xx, Double_t *par)
+{
+   Double_t x = xx[0];
+   if (x <= 0.13957) return 0;
+   Double_t xp3 = (x-0.1454)*(x-0.1454);
+   Double_t res = dxbin*(par[0]*TMath::Power(x-0.13957, 0.25)
+       + par[1] / 2.5066/sigma*TMath::Exp(-xp3/2/sigma/sigma));
+   return res;
+}
 
 void h1analysis()
 {
@@ -62,9 +89,9 @@ void h1analysis()
    hdmd->GetXaxis()->SetTitle("m_{K#pi#pi} - m_{K#pi}[GeV/c^{2}]");
    hdmd->GetXaxis()->SetTitleOffset(1.4);
 
-   //TF1 *f5 = new TF1("f5",0/*fdm5*/,0.139,0.17,5);
-   //f5->SetParameters(1000000, .25, 2000, .1454, .001);
-   //hdmd->Fit("f5","lr");
+   TF1 *f5 = new TF1("f5",fdm5,0.139,0.17,5);
+   f5->SetParameters(1000000, .25, 2000, .1454, .001);
+   hdmd->Fit("f5","lr");
 
    gStyle->SetOptFit(0);
    gStyle->SetOptStat(1100);
@@ -72,16 +99,16 @@ void h1analysis()
    c2->SetGrid();
    c2->SetBottomMargin(0.15);
    
-   //TF1 *f2 = new TF1("f2",0/*fdm2*/,0.139,0.17,2);
-   //f2->SetParameters(10000, 10);
-   //h2->FitSlicesX(f2,0,-1,1,"qln");
-   //TH1D *h2_1 = (TH1D*)gDirectory->Get("h2_1");
-   //h2_1->GetXaxis()->SetTitle("#tau[ps]");
-   //h2_1->SetMarkerStyle(21);
-   //h2_1->Draw();
-   //c2->Update();
-   //TLine *line = new TLine(0,0,0,c2->GetUymax());
-   //line->Draw();
+   TF1 *f2 = new TF1("f2",fdm2,0.139,0.17,2);
+   f2->SetParameters(10000, 10);
+   h2->FitSlicesX(f2,0,-1,1,"qln");
+   TH1D *h2_1 = (TH1D*)gDirectory->Get("h2_1");
+   h2_1->GetXaxis()->SetTitle("#tau[ps]");
+   h2_1->SetMarkerStyle(21);
+   h2_1->Draw();
+   c2->Update();
+   TLine *line = new TLine(0,0,0,c2->GetUymax());
+   line->Draw();
    
    hdmd->Draw();
    h2->Draw();

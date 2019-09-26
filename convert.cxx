@@ -31,7 +31,6 @@ using RNTupleWriter = ROOT::Experimental::RNTupleWriter;
 const std::string fileLocation = "http://root.cern.ch/files/h1/";
 
 void convert(const std::string fileName) {
-   std::cout << "Passed convert.cxx, will create " << fileName << "\n";
    const std::string fullPath = fileLocation + fileName;
    
    std::unique_ptr<TFile> f(TFile::Open(fullPath.c_str()));
@@ -83,6 +82,4 @@ void convert(const std::string fileName) {
          ntuple->Fill();
       }
    }
-   
-   //tree->Print();
 }
