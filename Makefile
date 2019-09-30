@@ -23,4 +23,4 @@ MyDict.cxx: $(HEADERS) Linkdef.h
 
 .PHONY : clean
 clean:
-	rm -rf *.o libH1Event.so *.dSYM *.pcm MyDict.cxx libH1event.so h1analysis *.root
+	rm -rf *.o libH1Event.so *.dSYM *.pcm MyDict.cxx libH1event.so h1analysis *.root *.pdf

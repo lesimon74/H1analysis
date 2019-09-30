@@ -19,7 +19,7 @@
 #include <TStyle.h>
 #include <TSystem.h>
 
-#include <fstream>
+#include <cstdint>
 
 using RNTupleModel = ROOT::Experimental::RNTupleModel;
 using RNTupleReader = ROOT::Experimental::RNTupleReader;
@@ -58,31 +58,47 @@ Double_t fdm2(Double_t *xx, Double_t *par)
 
 void h1analysis()
 {
-   // create non-existing ntuple-files by converting TTree files into ntuple files.
+   // Always create ntuple files from TTree files from scratch because the ntuple file format may change.
    for (const auto& f: ntupleFiles) {
-      if (!std::ifstream(f)) {
-         convert(f);
-      }
+      convert(f);
    }
-   
-   // Loads the dictionary for H1event objects.
+
+   // Ntuple fields can be only created for basic types (e.g. bool) and types with dictionaries.
    gSystem->Load("./libH1event.so");
-   
+
    auto ntuple = RNTupleReader::Open("h42", ntupleFiles);
    ntuple->PrintInfo();
-   
+
    auto hdmd = new TH1F("hdmd","dm_d",40,0.13,0.17);
    auto h2   = new TH2F("h2","ptD0 vs dm_d",30,0.135,0.165,30,-3,6);
 
    auto dm_dView = ntuple->GetView<float>("event.dm_d");
    auto rpd0_tView = ntuple->GetView<float>("event.rpd0_t");
    auto ptd0_dView = ntuple->GetView<float>("event.ptd0_d");
+
+   auto ptds_dView = ntuple->GetView<float>("event.ptds_d");
+   auto etads_dView = ntuple->GetView<float>("event.etads_d");
+   auto ikView = ntuple->GetView<std::int32_t>("event.ik");
+   auto ipiView = ntuple->GetView<std::int32_t>("event.ipi");
+   auto ipisView = ntuple->GetView<std::int32_t>("event.ipis");
+   auto md0_dView = ntuple->GetView<float>("event.md0_d");
+   auto trackInfoView = ntuple->GetView<std::vector<H1Event::ntrack>>("event.trackInfo");
+   auto njetsView = ntuple->GetView<std::int32_t>("event.njets");
+
    for (auto i : ntuple->GetViewRange()) {
-      hdmd->Fill(dm_dView(i));
-      h2->Fill(dm_dView(i),rpd0_tView(i)/0.029979*1.8646/ptd0_dView(i));
+      bool badEntry = false;
+      auto ik = ikView(i) - 1;
+      auto ipi = ipiView(i) - 1;
+      auto ipis = ipisView(i) - 1;
+      if (ptds_dView(i) <= 2.5 || TMath::Abs(etads_dView(i)) >= 1.5 || TMath::Abs(md0_dView(i)-1.8646) >= 0.04 || trackInfoView(i).at(ik).nhitrp * trackInfoView(i).at(ipi).nhitrp <= 1 || trackInfoView(i).at(ik).rend - trackInfoView(i).at(ik).rstart <= 22 || trackInfoView(i).at(ipi).rend - trackInfoView(i).at(ipi).rstart <= 22 || trackInfoView(i).at(ik).nlhk <= 0.1 || trackInfoView(i).at(ipi).nlhpi <= 0.1 || trackInfoView(i).at(ipis).nlhpi <= 0.1 || njetsView(i) < 1)
+         badEntry = true;
+      // Filter out bad entries.
+      if (!badEntry) {
+         hdmd->Fill(dm_dView(i));
+         h2->Fill(dm_dView(i),rpd0_tView(i)/0.029979*1.8646/ptd0_dView(i));
+      }
    }
-   
-   
+
    gStyle->SetOptFit();
    TCanvas *c1 = new TCanvas("c1","h1analysis analysis",10,10,800,600);
    c1->SetBottomMargin(0.15);
@@ -98,7 +114,7 @@ void h1analysis()
    TCanvas *c2 = new TCanvas("c2","tauD0",100,100,800,600);
    c2->SetGrid();
    c2->SetBottomMargin(0.15);
-   
+
    TF1 *f2 = new TF1("f2",fdm2,0.139,0.17,2);
    f2->SetParameters(10000, 10);
    h2->FitSlicesX(f2,0,-1,1,"qln");
@@ -109,10 +125,10 @@ void h1analysis()
    c2->Update();
    TLine *line = new TLine(0,0,0,c2->GetUymax());
    line->Draw();
-   
-   hdmd->Draw();
-   h2->Draw();
-} // end void h1analysis()
+
+   c1->Print("c1.pdf");
+   c2->Print("c2.pdf");
+}
 
 int main() {
    h1analysis();
