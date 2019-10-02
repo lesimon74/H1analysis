@@ -1,11 +1,10 @@
 //
-//  h1analysis.c
+//  h1analysis_ntuple.c
 //  
 //
-//  Created by Simon Leisibach on 25.09.19.
+//  Created by Simon Leisibach on 30.09.19.
 //
 
-#include "convert.h"
 #include "h1event.h"
 
 #include <ROOT/RNTuple.hxx>
@@ -53,13 +52,9 @@ Double_t fdm2(Double_t *xx, Double_t *par)
    return res;
 }
 
-void h1analysis()
+void h1analysis_ntuple()
 {
-   // Always create ntuple files from TTree files from scratch because the ntuple file format may change.
-   for (const auto& f: ntupleFiles) {
-      convert(f);
-   }
-
+   // assume ntuple files already exist.
    // Ntuple fields can be only created for basic types (e.g. bool) and types with dictionaries.
    gSystem->Load("./libH1event.so");
 
@@ -106,6 +101,7 @@ void h1analysis()
    TF1 *f5 = new TF1("f5",fdm5,0.139,0.17,5);
    f5->SetParameters(1000000, .25, 2000, .1454, .001);
    hdmd->Fit("f5","lr");
+   hdmd->DrawCopy();
 
    gStyle->SetOptFit(0);
    gStyle->SetOptStat(1100);
@@ -123,12 +119,7 @@ void h1analysis()
    c2->Update();
    TLine *line = new TLine(0,0,0,c2->GetUymax());
    line->Draw();
-
-   c1->Print("c1.pdf");
-   c2->Print("c2.pdf");
-}
-
-int main() {
-   h1analysis();
-   return 0;
+   
+   //c1->Print("c1.pdf");
+   //c2->Print("c2.pdf");
 }
