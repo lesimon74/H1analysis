@@ -43,7 +43,6 @@ void convert(const std::string fileName) {
    auto tree = f->Get<TTree>("h42");
    TTreeReader reader("h42", f.get());
 
-   // Only create a TTreeReaderValue or TTreeReaderArray for branches relevant for the analysis.
    TTreeReaderValue<std::int32_t>   nrun(reader, "nrun"); // 0
    TTreeReaderValue<std::int32_t>   nevent(reader, "nevent"); // 1
    TTreeReaderValue<std::int32_t>   nentry(reader, "nentry"); // 2
@@ -205,7 +204,7 @@ void convert(const std::string fileName) {
    TTreeReaderValue<float>          spher(reader, "spher"); // 148
    TTreeReaderValue<float>          aplan(reader, "aplan"); // 149
    TTreeReaderValue<float>          plan(reader, "plan"); // 150
-   TTreeReaderValue<float>          nnout(reader, "nnout"); // 151
+   TTreeReaderArray<float>          nnout(reader, "nnout"); // 151
    
    
 
@@ -218,33 +217,32 @@ void convert(const std::string fileName) {
 
       // h42 refers to the name of the ntuple.
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "h42", fileName);
-
       int count = 0;
-      
+
       // Fills the ntuple with entries from the TTree.
       while(reader.Next()) {
-         std::vector<bool> trelemNTuple(192);
+         std::array<bool, 192> trelemNTuple;
          for (int i = 0; i < 192; ++i) {
             trelemNTuple.at(i) = trelem[i];
          }
          
-         std::vector<bool> subtrNTuple(128);
+         std::array<bool, 128> subtrNTuple;
          for (int i = 0; i < 128; ++i) {
             subtrNTuple.at(i) = subtr[i];
          }
          
-         std::vector<bool> rawtrNTuple(128);
+         std::array<bool, 128> rawtrNTuple;
          for (int i = 0; i < 128; ++i) {
             rawtrNTuple.at(i) = rawtr[i];
          }
          
-         std::vector<bool> L4subtrNTuple(128);
+         std::array<bool, 128> L4subtrNTuple;
          for (int i = 0; i < 128; ++i) {
             L4subtrNTuple.at(i) = L4subtr[i];
          }
          
-         std::vector<bool> L5classNTuple(128);
-         for (int i = 0; i < 128; ++i) {
+         std::array<bool, 32> L5classNTuple;
+         for (int i = 0; i < 32; ++i) {
             L5classNTuple.at(i) = L5class[i];
          }
          
@@ -253,9 +251,9 @@ void convert(const std::string fileName) {
             pelecNTuple.at(i) = pelec[i];
          }
          
-         std::vector<H1Event::elec> nelecNTuple(*nelec);
+         std::vector<H1Event::Electron> nelecNTuple(*nelec);
          for (int i = 0; i < *nelec; ++i) {
-            nelecNTuple.at(i) = H1Event::elec{Eelec[i], thetelec[i], phielec[i], xelec[i], Q2elec[i], xsigma[i], Q2sigma[i]};
+            nelecNTuple.at(i) = H1Event::Electron{Eelec[i], thetelec[i], phielec[i], xelec[i], Q2elec[i], xsigma[i], Q2sigma[i]};
          }
          
          std::array<float, 4> sumcNTuple;
@@ -346,14 +344,14 @@ void convert(const std::string fileName) {
             covarVec.emplace_back(ar);
          }
          
-         std::vector<H1Event::track> ntrackNTuple(*ntracks);
+         std::vector<H1Event::Track> ntrackNTuple(*ntracks);
          for (int i = 0; i < *ntracks; ++i) {
-            ntrackNTuple.at(i) = H1Event::track{ pt[i], kappa[i], phi[i], theta[i], dca[i], z0[i], covarVec.at(i), nhitrp[i], prbrp[i], nhitz[i], prbz[i], rstart[i], rend[i], lhk[i], lhpi[i], nlhk[i], nlhpi[i], dca_d[i], ddca_d[i], dca_t[i], ddca_t[i], muqual[i]};
+            ntrackNTuple.at(i) = H1Event::Track{ pt[i], kappa[i], phi[i], theta[i], dca[i], z0[i], covarVec.at(i), nhitrp[i], prbrp[i], nhitz[i], prbz[i], rstart[i], rend[i], lhk[i], lhpi[i], nlhk[i], nlhpi[i], dca_d[i], ddca_d[i], dca_t[i], ddca_t[i], muqual[i]};
          }
 
-         std::vector<H1Event::jet> njetNTuple(*njets);
+         std::vector<H1Event::Jet> njetNTuple(*njets);
          for (int i = 0; i < *njets; ++i) {
-            njetNTuple.at(i) = H1Event::jet{E_j[i], pt_j[i], theta_j[i], eta_j[i], phi_j[i], m_j[i]};
+            njetNTuple.at(i) = H1Event::Jet{E_j[i], pt_j[i], theta_j[i], eta_j[i], phi_j[i], m_j[i]};
          }
 
          std::array<float, 4> pthrustNTuple;
@@ -366,7 +364,7 @@ void convert(const std::string fileName) {
             pthrust2NTuple.at(i) = pthrust2[i];
          }
 
-         H1Event eventEntry{/*0-9*/ *nrun, *nevent, *nentry, std::move(trelemNTuple), subtrNTuple, rawtrNTuple, L4subtrNTuple, L5classNTuple, *E33, *de33, /*10-19*/ *x33, *dx33, *y33, *dy33, *E44, *de44, *x44, *dx44, *y44, *dy44, /*20-29*/ *Ept, *dept, *xpt, *dxpt, *ypt, *dypt, pelecNTuple, *flagelec, *xeelec, *yeelec, /*30-39*/ *Q2eelec, *nelec, nelecNTuple, sumcNTuple, /*40-49*/ *sumetc, *yjbc, *Q2jbc, sumctNTuple, *sumetct, *yjbct, *Q2jbct, *yjbct, *Q2jbct, pvtx_dNTuple, /*50-59*/ cpvtx_dNTuple, pvtx_tNTuple, cpvtx_tNTuple, *ntrkxy_t, *prbxy_t, *ntrkz_t, *prbz_t, *nds, *rankds, *qds, /*60-69*/ pds_dNTuple, *ptds_d, *etads_d, *dm_d, *ddm_d, pds_tNTuple, *dm_t, *ddm_t, *ik, *ipi, /*70-79*/ *ipis, pd0_dNTuple, *ptd0_d, *etad0_d, *md0_d, *dmd0_d, pd0_tNTuple, *md0_t, *dmd0_t, pk_rNTuple, /*80-89*/ ppi_rNTuple, pd0_rNTuple, *md0_r, Vtxd0_rNTuple, cvtxd0_rNTuple, *dxy_r, *dz_r, *psi_r, *rd0_d, *drd0_d, /*90-99*/ *rpd0_d, *drpd0_d, *rd0_t, *drd0_t, *rpd0_t, *drpd0_t, *rd0_dt, *drd0_dt, *prbr_dt, *prbz_dt, /*100-109*/ *rd0_tt, *drd0_tt, *prbr_tt, *prbz_tt, *ijetd0, *ptr3d0_j, *ptr2d0_j, *ptr3d0_3, *ptr2d0_3, *ptr2d0_2, /*110-134*/ *Mimpds_r, *Mimpbk_r, *ntracks, ntrackNTuple, /*135-143*/ *imu, *imufe, *njets, njetNTuple, /*144-151*/ *thrust, pthrustNTuple, *thrust2, pthrust2NTuple, *spher, *aplan, *plan, *nnout};
+         H1Event eventEntry{/*0-9*/ *nrun, *nevent, *nentry, std::move(trelemNTuple), std::move(subtrNTuple), std::move(rawtrNTuple), std::move(L4subtrNTuple), std::move(L5classNTuple), *E33, *de33, /*10-19*/ *x33, *dx33, *y33, *dy33, *E44, *de44, *x44, *dx44, *y44, *dy44, /*20-29*/ *Ept, *dept, *xpt, *dxpt, *ypt, *dypt, std::move(pelecNTuple), *flagelec, *xeelec, *yeelec, /*30-39*/ *Q2eelec, /* *nelec,*/ std::move(nelecNTuple), sumcNTuple, /*40-49*/ *sumetc, *yjbc, *Q2jbc, std::move(sumctNTuple), *sumetct, *yjbct, *Q2jbct, *yjbct, *Q2jbct, std::move(pvtx_dNTuple), /*50-59*/ std::move(cpvtx_dNTuple), std::move(pvtx_tNTuple), std::move(cpvtx_tNTuple), *ntrkxy_t, *prbxy_t, *ntrkz_t, *prbz_t, *nds, *rankds, *qds, /*60-69*/ std::move(pds_dNTuple), *ptds_d, *etads_d, *dm_d, *ddm_d, std::move(pds_tNTuple), *dm_t, *ddm_t, *ik, *ipi, /*70-79*/ *ipis, std::move(pd0_dNTuple), *ptd0_d, *etad0_d, *md0_d, *dmd0_d, std::move(pd0_tNTuple), *md0_t, *dmd0_t, std::move(pk_rNTuple), /*80-89*/ std::move(ppi_rNTuple), std::move(pd0_rNTuple), *md0_r, std::move(Vtxd0_rNTuple), std::move(cvtxd0_rNTuple), *dxy_r, *dz_r, *psi_r, *rd0_d, *drd0_d, /*90-99*/ *rpd0_d, *drpd0_d, *rd0_t, *drd0_t, *rpd0_t, *drpd0_t, *rd0_dt, *drd0_dt, *prbr_dt, *prbz_dt, /*100-109*/ *rd0_tt, *drd0_tt, *prbr_tt, *prbz_tt, *ijetd0, *ptr3d0_j, *ptr2d0_j, *ptr3d0_3, *ptr2d0_3, *ptr2d0_2, /*110-134*/ *Mimpds_r, *Mimpbk_r, /* *ntracks,*/ std::move(ntrackNTuple), /*135-143*/ *imu, *imufe, /* *njets,*/ std::move(njetNTuple), /*144-151*/ *thrust, std::move(pthrustNTuple), *thrust2, std::move(pthrust2NTuple), *spher, *aplan, *plan, {nnout[0]}};
          *ev = eventEntry;
          ntuple->Fill();
       }

@@ -18,11 +18,11 @@ struct H1Event {
    std::int32_t nrun; // 0
    std::int32_t nevent; // 1
    std::int32_t nentry; // 2
-   std::vector<bool> trelem; // 3, size = 192, despite its fixed size std::vector was used instead of std::array because of its bit packing memory optimization.
-   std::vector<bool> subtr; // 4, size = 128
-   std::vector<bool> rawtr; // 5, size = 128
-   std::vector<bool> L4subtr; // 6, size = 128
-   std::vector<bool> L5class; // 7, size = 32
+   std::array<bool, 192> trelem; // 3
+   std::array<bool, 128> subtr; // 4
+   std::array<bool, 128> rawtr; // 5
+   std::array<bool, 128> L4subtr; // 6
+   std::array<bool, 32> L5class; // 7
    float E33; // 8
    float de33; // 9
    float x33; // 10
@@ -46,9 +46,9 @@ struct H1Event {
    float xeelec; // 28
    float yeelec; // 29
    float Q2eelec; // 30
-   std::int32_t nelec; // 31
+   //std::int32_t nelec; // 31
    
-   struct elec {
+   struct Electron {
       float Eelec; // 32
       float thetelec; // 33
       float phielec; // 34
@@ -58,7 +58,7 @@ struct H1Event {
       float Q2sigma; // 38
    };
    
-   std::vector<elec> elecInfo; // elecInfo.size() = nelec
+   std::vector<Electron> electrons; // elecInfo.size() = nelec
    std::array<float, 4> sumc; // 39
    float sumetc; // 40
    float yjbc; // 41
@@ -132,9 +132,9 @@ struct H1Event {
    float ptr2d0_2; // 109
    float Mimpds_r; // 110
    float Mimpbk_r; // 111
-   std::int32_t ntracks; // 112 -> almost always has value 3
+   //std::int32_t ntracks; // 112 -> almost always has value 3
    
-   struct track {
+   struct Track {
       float pt; // 113
       float kappa; // 114
       float phi; // 115
@@ -159,12 +159,12 @@ struct H1Event {
       std::int32_t muqual; // 134
    };
    
-   std::vector<track> trackInfo; // trackInfo.size() = ntracks
+   std::vector<Track> tracks; // trackInfo.size() = ntracks
    std::int32_t imu; // 135
    std::int32_t imufe; // 136
-   std::int32_t njets; // 137
+   //std::int32_t njets; // 137
    
-   struct jet {
+   struct Jet {
       float E_j; // 138
       float pt_j; // 139
       float theta_j; // 140
@@ -173,7 +173,7 @@ struct H1Event {
       float m_j; // 143
    };
    
-   std::vector<jet> jetInfo; // jetInfo.size() = njets
+   std::vector<Jet> jets; // jetInfo.size() = njets
    float thrust; // 144
    std::array<float, 4> pthrust; // 145
    float thrust2; // 146
@@ -181,7 +181,7 @@ struct H1Event {
    float spher; // 148
    float aplan; // 149
    float plan; // 150
-   float nnout; // 151
+   std::array<float, 1> nnout; // 151
 };
 
 #endif
